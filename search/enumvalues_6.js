@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['servererrorbase',['ServerErrorBase',['../namespaceQJsonChannel.html#a039ecfbd0e447f40a72d508e476839fba3c662998f8de7d2ac32982b7f3ee3188',1,'QJsonChannel']]]
+  ['request',['Request',['../classQJsonChannelMessage.html#a809f5209124be94455f504dd95f4a6e1aa585b59aac8f014b24904802a65bd73c',1,'QJsonChannelMessage']]],
+  ['response',['Response',['../classQJsonChannelMessage.html#a809f5209124be94455f504dd95f4a6e1a418a2799c95e993872bac14cb3e42620',1,'QJsonChannelMessage']]]
 ];

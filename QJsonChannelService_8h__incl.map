@@ -1,14 +1,15 @@
 <map id="src/QJsonChannelService.h" name="src/QJsonChannelService.h">
-<area shape="rect" id="node1" title=" " alt="" coords="91,5,272,32"/>
-<area shape="rect" id="node2" title=" " alt="" coords="47,80,121,107"/>
-<area shape="rect" id="node3" title=" " alt="" coords="145,80,218,107"/>
-<area shape="rect" id="node4" href="$QJsonChannelMessage_8h.html" title=" " alt="" coords="243,80,413,107"/>
-<area shape="rect" id="node5" title=" " alt="" coords="5,155,147,181"/>
-<area shape="rect" id="node6" title=" " alt="" coords="282,229,371,256"/>
-<area shape="rect" id="node7" title=" " alt="" coords="222,155,314,181"/>
-<area shape="rect" id="node8" title=" " alt="" coords="338,155,435,181"/>
-<area shape="rect" id="node9" title=" " alt="" coords="460,155,551,181"/>
-<area shape="rect" id="node10" href="$QJsonChannelGlobal_8h.html" title=" " alt="" coords="575,155,729,181"/>
-<area shape="rect" id="node11" title=" " alt="" coords="538,229,611,256"/>
-<area shape="rect" id="node12" title=" " alt="" coords="636,229,823,256"/>
+<area shape="rect" id="node1" title=" " alt="" coords="118,5,299,32"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,80,76,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="101,80,191,107"/>
+<area shape="rect" id="node4" title=" " alt="" coords="215,80,330,107"/>
+<area shape="rect" id="node5" href="$QJsonChannelMessage_8h.html" title=" " alt="" coords="354,80,525,107"/>
+<area shape="rect" id="node6" title=" " alt="" coords="117,155,258,181"/>
+<area shape="rect" id="node7" title=" " alt="" coords="393,229,483,256"/>
+<area shape="rect" id="node8" title=" " alt="" coords="333,155,425,181"/>
+<area shape="rect" id="node9" title=" " alt="" coords="449,155,547,181"/>
+<area shape="rect" id="node10" title=" " alt="" coords="571,155,662,181"/>
+<area shape="rect" id="node11" href="$QJsonChannelGlobal_8h.html" title=" " alt="" coords="686,155,841,181"/>
+<area shape="rect" id="node12" title=" " alt="" coords="649,229,723,256"/>
+<area shape="rect" id="node13" href="$QJsonChannelCore__export_8h.html" title=" " alt="" coords="747,229,934,256"/>
 </map>

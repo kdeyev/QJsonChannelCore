@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['addservice',['addService',['../classQJsonChannelServiceRepository.html#a2b7daf30399fccdbc4accef337ece629',1,'QJsonChannelServiceRepository::addService(QJsonChannelService *service)'],['../classQJsonChannelServiceRepository.html#aa807e6e9c5569513c2256f9507f617a8',1,'QJsonChannelServiceRepository::addService(const QByteArray &amp;name, const QByteArray &amp;version, const QByteArray &amp;description, QObject *obj)']]]
+  ['addservice',['addService',['../classQJsonChannelServiceRepository.html#a576e7d512359481167cfc645c1b6aa39',1,'QJsonChannelServiceRepository::addService(const QSharedPointer&lt; QJsonChannelService &gt; &amp;service)'],['../classQJsonChannelServiceRepository.html#a44add3117de235d3495d4280aa7c95e1',1,'QJsonChannelServiceRepository::addService(const QByteArray &amp;name, const QByteArray &amp;version, const QByteArray &amp;description, QSharedPointer&lt; QObject &gt; obj)']]]
 ];

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['timeouterror',['TimeoutError',['../namespaceQJsonChannel.html#a039ecfbd0e447f40a72d508e476839fba8f7bb6e8b283561cde1bfaba800bd352',1,'QJsonChannel']]]
+  ['servererrorbase',['ServerErrorBase',['../namespaceQJsonChannel.html#a039ecfbd0e447f40a72d508e476839fba3c662998f8de7d2ac32982b7f3ee3188',1,'QJsonChannel']]]
 ];

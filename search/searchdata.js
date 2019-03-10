@@ -1,12 +1,12 @@
 var indexSectionsWithContent =
 {
-  0: "acefgijmnopqrstu~",
+  0: "acdefgimnopqrstu~",
   1: "q",
   2: "q",
   3: "qr",
-  4: "acefgijmopqrst~",
+  4: "acdefgimopqrst~",
   5: "et",
-  6: "eimnprstu",
+  6: "deimnprstu",
   7: "q",
   8: "q"
 };
@@ -20,7 +20,7 @@ var indexSectionNames =
   4: "functions",
   5: "enums",
   6: "enumvalues",
-  7: "related",
+  7: "defines",
   8: "pages"
 };
 
@@ -33,7 +33,7 @@ var indexSectionLabels =
   4: "Functions",
   5: "Enumerations",
   6: "Enumerator",
-  7: "Friends",
+  7: "Macros",
   8: "Pages"
 };
 

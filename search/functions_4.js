@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['getservice',['getService',['../classQJsonChannelServiceRepository.html#a8032e8abcf6be04257ddc7b3d0c85d8d',1,'QJsonChannelServiceRepository']]],
-  ['getserviceobject',['getServiceObject',['../classQJsonChannelServiceRepository.html#ad0e0b49946b74d81a37bd013654e1e3e',1,'QJsonChannelServiceRepository']]]
+  ['fromjson',['fromJson',['../classQJsonChannelMessage.html#a2b08da6184a54371d00df8bf3b6706ee',1,'QJsonChannelMessage']]],
+  ['fromobject',['fromObject',['../classQJsonChannelMessage.html#a4d9120d80a3b26d5a584b5bc1281380e',1,'QJsonChannelMessage']]]
 ];
