@@ -10,13 +10,13 @@ class QJsonChannelServiceRepositoryPrivate {
 public:
     QJsonObject servicesInfo () const;
 
-    QHash<QByteArray, QSharedPointer<QJsonChannelService>> services;
+    QHash<QByteArray, QSharedPointer<QJsonChannelService>> _services;
 };
 
 QJsonObject QJsonChannelServiceRepositoryPrivate::servicesInfo () const {
     QJsonObject objectInfos;
-    const auto  end = services.constEnd ();
-    for (auto it = services.constBegin (); it != end; ++it) {
+    const auto  end = _services.constEnd ();
+    for (auto it = _services.constBegin (); it != end; ++it) {
         const QJsonObject& info = it.value ()->serviceInfo ();
         objectInfos[it.key ()]  = info;
     }
@@ -48,12 +48,12 @@ bool QJsonChannelServiceRepository::addService (const QSharedPointer<QJsonChanne
         return false;
     }
 
-    if (d->services.contains (serviceName)) {
+    if (d->_services.contains (serviceName)) {
         QJsonChannelDebug () << Q_FUNC_INFO << "service with name " << serviceName << " already exist";
         return false;
     }
 
-    d->services.insert (serviceName, service);
+    d->_services.insert (serviceName, service);
     return true;
 }
 
@@ -63,29 +63,29 @@ bool QJsonChannelServiceRepository::addService (const QSharedPointer<QJsonChanne
 //}
 
 bool QJsonChannelServiceRepository::removeService (const QByteArray& serviceName) {
-    if (!d->services.contains (serviceName)) {
+    if (!d->_services.contains (serviceName)) {
         QJsonChannelDebug () << Q_FUNC_INFO << "can not find service with name " << serviceName;
         return false;
     }
 
-    d->services.remove (serviceName);
+    d->_services.remove (serviceName);
     return true;
 }
 
 QSharedPointer<QJsonChannelService> QJsonChannelServiceRepository::getService (const QByteArray& serviceName) {
-    if (!d->services.contains (serviceName)) {
+    if (!d->_services.contains (serviceName)) {
         return nullptr;
     }
 
-    return d->services.value (serviceName);
+    return d->_services.value (serviceName);
 }
 
 QSharedPointer<QObject> QJsonChannelServiceRepository::getServiceObject (const QByteArray& serviceName) {
-    if (!d->services.contains (serviceName)) {
+    if (!d->_services.contains (serviceName)) {
         return nullptr;
     }
 
-    return d->services.value (serviceName)->serviceObj ();
+    return d->_services.value (serviceName)->serviceObj ();
 }
 
 QJsonChannelMessage QJsonChannelServiceRepository::processMessage (const QJsonChannelMessage& message) const {
@@ -98,14 +98,14 @@ QJsonChannelMessage QJsonChannelServiceRepository::processMessage (const QJsonCh
     case QJsonChannelMessage::Notification: {
         //
         QByteArray serviceName = message.serviceName ().toLatin1 ();
-        if (serviceName.isEmpty () || !d->services.contains (serviceName)) {
+        if (serviceName.isEmpty () || !d->_services.contains (serviceName)) {
             if (message.type () == QJsonChannelMessage::Request) {
                 QJsonChannelMessage error =
                     message.createErrorResponse (QJsonChannel::MethodNotFound, QString ("service '%1' not found").arg (serviceName.constData ()));
                 return error;
             }
         } else {
-            QSharedPointer<QJsonChannelService> service  = d->services.value (serviceName);
+            QSharedPointer<QJsonChannelService> service  = d->_services.value (serviceName);
             QJsonChannelMessage                 response = service->dispatch (message);
             return response;
         }
