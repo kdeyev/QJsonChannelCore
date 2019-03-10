@@ -7,6 +7,11 @@
 #include "QJsonChannelMessage.h"
 
 class QJsonChannelServicePrivate;
+
+/**
+ * @brief Service wrapper over QOblect is responsible for QObjects methods ivocation according to JSON-RPC requests messages.
+ * 
+ */
 class QJSONCHANNELCORE_EXPORT QJsonChannelService {
 public:
 

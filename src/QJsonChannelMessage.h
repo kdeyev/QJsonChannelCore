@@ -10,6 +10,11 @@
 #include "QJsonChannelGlobal.h"
 
 class QJsonChannelMessagePrivate;
+
+/**
+ * @brief Representation of JSON-RPC message.
+ * 
+ */
 class QJSONCHANNELCORE_EXPORT QJsonChannelMessage {
 public:
     QJsonChannelMessage ();
