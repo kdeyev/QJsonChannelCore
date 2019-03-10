@@ -102,7 +102,7 @@ Collaboration diagram for QJsonChannelServiceRepository:</div>
 <div class="dyncontent">
 <div class="center"><img src="classQJsonChannelServiceRepository__coll__graph.png" border="0" usemap="#QJsonChannelServiceRepository_coll__map" alt="Collaboration graph"/></div>
 <map name="QJsonChannelServiceRepository_coll__map" id="QJsonChannelServiceRepository_coll__map">
-<area shape="rect"  title="The main entity of QJsonChannel represents service repository and provides API for a JSON&#45;RPC method ..." alt="" coords="5,5,244,185"/>
+<area shape="rect"  title="The main entity of QJsonChannel represents service repository and provides API for a JSON&#45;RPC method ..." alt="" coords="5,5,244,200"/>
 </map>
 </div>
 <table class="memberdecls">
@@ -118,6 +118,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a44add3117de235d3495d4280aa7c95e1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQJsonChannelServiceRepository.html#a44add3117de235d3495d4280aa7c95e1">addService</a> (const QByteArray &amp;name, const QByteArray &amp;version, const QByteArray &amp;description, QSharedPointer&lt; QObject &gt; obj)</td></tr>
 <tr class="memdesc:a44add3117de235d3495d4280aa7c95e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds service to the repository.  <a href="#a44add3117de235d3495d4280aa7c95e1">More...</a><br /></td></tr>
 <tr class="separator:a44add3117de235d3495d4280aa7c95e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6566c4b5eae059ef0a95386b689c567c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQJsonChannelServiceRepository.html#a6566c4b5eae059ef0a95386b689c567c">addThreadSafeService</a> (const QByteArray &amp;name, const QByteArray &amp;version, const QByteArray &amp;description, QSharedPointer&lt; QObject &gt; obj)</td></tr>
+<tr class="memdesc:a6566c4b5eae059ef0a95386b689c567c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds thread-safe service to the repository. Service will be not locker during the methods invocation.  <a href="#a6566c4b5eae059ef0a95386b689c567c">More...</a><br /></td></tr>
+<tr class="separator:a6566c4b5eae059ef0a95386b689c567c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a30eb44c23a40abc72cf95984bc3ef9f6"><td class="memItemLeft" align="right" valign="top">QSharedPointer&lt; <a class="el" href="classQJsonChannelService.html">QJsonChannelService</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classQJsonChannelServiceRepository.html#a30eb44c23a40abc72cf95984bc3ef9f6">getService</a> (const QByteArray &amp;serviceName)</td></tr>
 <tr class="memdesc:a30eb44c23a40abc72cf95984bc3ef9f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return service by name.  <a href="#a30eb44c23a40abc72cf95984bc3ef9f6">More...</a><br /></td></tr>
 <tr class="separator:a30eb44c23a40abc72cf95984bc3ef9f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -254,6 +257,60 @@ false In case of failure </dd></dl>
 
 </div>
 </div>
+<a id="a6566c4b5eae059ef0a95386b689c567c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6566c4b5eae059ef0a95386b689c567c">&#9670;&nbsp;</a></span>addThreadSafeService()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool QJsonChannelServiceRepository::addThreadSafeService </td>
+          <td>(</td>
+          <td class="paramtype">const QByteArray &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const QByteArray &amp;&#160;</td>
+          <td class="paramname"><em>version</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const QByteArray &amp;&#160;</td>
+          <td class="paramname"><em>description</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">QSharedPointer&lt; QObject &gt;&#160;</td>
+          <td class="paramname"><em>obj</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adds thread-safe service to the repository. Service will be not locker during the methods invocation. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>Service name </td></tr>
+    <tr><td class="paramname">version</td><td>Service version </td></tr>
+    <tr><td class="paramname">description</td><td>Service description </td></tr>
+    <tr><td class="paramname">obj</td><td>Service object </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true In case the sevice was added </dd>
+<dd>
+false In case of failure </dd></dl>
+
+</div>
+</div>
 <a id="a30eb44c23a40abc72cf95984bc3ef9f6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a30eb44c23a40abc72cf95984bc3ef9f6">&#9670;&nbsp;</a></span>getService()</h2>
 
@@ -373,7 +430,7 @@ false in case of failure </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classQJsonChannelServiceRepository.html">QJsonChannelServiceRepository</a></li>
-    <li class="footer">Generated on Sun Mar 10 2019 22:21:50 for QJsonChannelCore by
+    <li class="footer">Generated on Sun Mar 10 2019 22:58:20 for QJsonChannelCore by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.15 </li>
   </ul>
