@@ -2,6 +2,8 @@
 #include <QMetaMethod>
 #include <QDebug>
 #include <QHash>
+#include <QMutex>
+#include <QMutexLocker>
 #include <QPointer>
 #include <QStringList>
 
@@ -17,8 +19,9 @@ class QJsonChannelService;
 class QJsonChannelServicePrivate {
 public:
     QJsonChannelServicePrivate (QJsonChannelService* parent, const QByteArray& name, const QByteArray& version, const QByteArray& description,
-                                QSharedPointer<QObject> obj)
-        : q_ptr (parent), serviceName (name), serviceVersion (version), serviceDescription (description), serviceObj (obj) {
+                                QSharedPointer<QObject> obj, bool threadSafe)
+        : q_ptr (parent), serviceName (name), serviceVersion (version), serviceDescription (description), serviceObj (obj),
+          serviceObjIsThreadSafe (threadSafe) {
     }
 
     QJsonObject createServiceInfo () const;
@@ -58,6 +61,10 @@ public:
     QByteArray                 serviceName;
     QString                    serviceVersion;
     QString                    serviceDescription;
+
+    bool   serviceObjIsThreadSafe = false;
+    mutable QMutex serviceMutex;
+
     Q_DECLARE_PUBLIC (QJsonChannelService)
 };
 
@@ -103,9 +110,9 @@ QJsonChannelServicePrivate::MethodInfo::MethodInfo (const QMetaMethod& method) :
     }
 }
 
-QJsonChannelService::QJsonChannelService (const QByteArray& name, const QByteArray& version, const QByteArray& description,
-                                          QSharedPointer<QObject> serviceObj) {
-    d_ptr.reset (new QJsonChannelServicePrivate (this, name, version, description, serviceObj));
+QJsonChannelService::QJsonChannelService (const QByteArray& name, const QByteArray& version, const QByteArray& description, QSharedPointer<QObject> serviceObj,
+                                          bool serviceObjIsThreadSafe) {
+    d_ptr.reset (new QJsonChannelServicePrivate (this, name, version, description, serviceObj, serviceObjIsThreadSafe));
     d_ptr->cacheInvokableInfo ();
 }
 
@@ -236,8 +243,8 @@ void QJsonChannelServicePrivate::cacheInvokableInfo () {
     for (int idx = startIdx; idx < obj->methodCount (); ++idx) {
         const QMetaMethod method = obj->method (idx);
         if ((method.methodType () == QMetaMethod::Slot && method.access () == QMetaMethod::Public) || method.methodType () == QMetaMethod::Signal) {
-            QByteArray signature  = method.methodSignature ();
-            QByteArray methodName = method.name ();
+            QByteArray  signature  = method.methodSignature ();
+            QByteArray  methodName = method.name ();
 
             MethodInfo info (method);
             if (!info.valid)
@@ -350,8 +357,8 @@ static inline QByteArray methodName (const QJsonChannelMessage& request) {
     return methodPath.midRef (methodPath.lastIndexOf ('.') + 1).toLatin1 ();
 }
 
-QJsonChannelMessage QJsonChannelService::dispatch (const QJsonChannelMessage& request) {
-    Q_D (QJsonChannelService);
+QJsonChannelMessage QJsonChannelService::dispatch (const QJsonChannelMessage& request) const {
+	const QJsonChannelServicePrivate* d = d_ptr.get();
     if (request.type () != QJsonChannelMessage::Request && request.type () != QJsonChannelMessage::Notification) {
         return request.createErrorResponse (QJsonChannel::InvalidRequest, "invalid request");
     }
@@ -373,7 +380,7 @@ QJsonChannelMessage QJsonChannelService::dispatch (const QJsonChannelMessage& re
 
     // iterate over candidates
     foreach (int methodIndex, indexes) {
-        QJsonChannelServicePrivate::MethodInfo& info = d->methodInfoHash[methodIndex];
+        const QJsonChannelServicePrivate::MethodInfo& info = d->methodInfoHash[methodIndex];
         bool methodMatch = usingNamedParameters ? jsParameterCompare (params.toObject (), info) : jsParameterCompare (params.toArray (), info);
 
         if (methodMatch) {
@@ -413,10 +420,18 @@ QJsonChannelMessage QJsonChannelService::dispatch (const QJsonChannelMessage& re
         return request.createErrorResponse (QJsonChannel::InvalidParams, "invalid parameters");
     }
 
-    QJsonChannelServicePrivate::MethodInfo& info = d->methodInfoHash[idx];
+    const QJsonChannelServicePrivate::MethodInfo& info = d->methodInfoHash[idx];
 
-    QSharedPointer<QObject>& serviceObj = d->serviceObj;
-    bool                     success    = serviceObj->qt_metacall (QMetaObject::InvokeMetaMethod, idx, parameters.data ()) < 0;
+    const QSharedPointer<QObject>& serviceObj = d->serviceObj;
+
+    bool success = false;
+    if (d->serviceObjIsThreadSafe) {
+        success = serviceObj->qt_metacall (QMetaObject::InvokeMetaMethod, idx, parameters.data ()) < 0;
+    } else {
+        QMutexLocker lock (&d->serviceMutex);
+        success = serviceObj->qt_metacall (QMetaObject::InvokeMetaMethod, idx, parameters.data ()) < 0;
+    }
+
     if (!success) {
         QString message = QString ("dispatch for method '%1' failed").arg (method.constData ());
         return request.createErrorResponse (QJsonChannel::InvalidRequest, message);

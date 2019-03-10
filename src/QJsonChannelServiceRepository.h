@@ -38,6 +38,18 @@ public:
      */
     bool addService (const QByteArray& name, const QByteArray& version, const QByteArray& description, QSharedPointer<QObject> obj);
 
+	/**
+	* @brief Adds thread-safe service to the repository. Service will be not locker during the methods invocation.
+	*
+	* @param name Service name
+	* @param version Service version
+	* @param description Service description
+	* @param obj Service object
+	* @return true In case the sevice was added
+	* @return false In case of failure
+	*/
+	bool addThreadSafeService(const QByteArray& name, const QByteArray& version, const QByteArray& description, QSharedPointer<QObject> obj);
+
     /**
      * @brief Return service by name
      * 
