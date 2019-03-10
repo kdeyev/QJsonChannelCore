@@ -10,8 +10,7 @@ class QJsonChannelServiceRepositoryPrivate {
 public:
     QJsonObject servicesInfo () const;
 
-    QHash<QByteArray, QJsonChannelService*> services;
-    QObjectCleanupHandler                   cleanupHandler;
+    QHash<QByteArray, QSharedPointer<QJsonChannelService>> services;
 };
 
 QJsonObject QJsonChannelServiceRepositoryPrivate::servicesInfo () const {
@@ -30,12 +29,12 @@ QJsonChannelServiceRepository::QJsonChannelServiceRepository () : d (new QJsonCh
 QJsonChannelServiceRepository::~QJsonChannelServiceRepository () {
 }
 
-bool QJsonChannelServiceRepository::addService (const QByteArray& serviceName, const QByteArray& version, const QByteArray& description, QObject* obj) {
-    QJsonChannelService* service = new QJsonChannelService(serviceName, version, description, obj);
+bool QJsonChannelServiceRepository::addService (const QByteArray& serviceName, const QByteArray& version, const QByteArray& description, QSharedPointer<QObject> obj) {
+	QSharedPointer<QJsonChannelService> service (new QJsonChannelService(serviceName, version, description, obj));
 	return addService (service);
 }
 
-bool QJsonChannelServiceRepository::addService (QJsonChannelService* service) {
+bool QJsonChannelServiceRepository::addService (const QSharedPointer <QJsonChannelService>& service) {
     QByteArray serviceName = service->serviceName ();
     if (serviceName.isEmpty ()) {
         QJsonChannelDebug () << Q_FUNC_INFO << "service added without serviceName classinfo, aborting";
@@ -47,18 +46,14 @@ bool QJsonChannelServiceRepository::addService (QJsonChannelService* service) {
         return false;
     }
 
-    service->cacheInvokableInfo ();
     d->services.insert (serviceName, service);
-    if (!service->parent ()) {
-        d->cleanupHandler.add (service);
-    }
     return true;
 }
 
-bool QJsonChannelServiceRepository::removeService (QJsonChannelService* service) {
-    QByteArray serviceName = service->serviceName ();
-    return removeService (serviceName);
-}
+//bool QJsonChannelServiceRepository::removeService (QJsonChannelService* service) {
+//    QByteArray serviceName = service->serviceName ();
+//    return removeService (serviceName);
+//}
 
 bool QJsonChannelServiceRepository::removeService (const QByteArray& serviceName) {
     if (!d->services.contains (serviceName)) {
@@ -66,12 +61,11 @@ bool QJsonChannelServiceRepository::removeService (const QByteArray& serviceName
         return false;
     }
 
-    d->cleanupHandler.remove (d->services.value (serviceName));
     d->services.remove (serviceName);
     return true;
 }
 
-QJsonChannelService* QJsonChannelServiceRepository::getService (const QByteArray& serviceName) {
+QSharedPointer <QJsonChannelService> QJsonChannelServiceRepository::getService (const QByteArray& serviceName) {
     if (!d->services.contains (serviceName)) {
         return nullptr;
     }
@@ -79,7 +73,7 @@ QJsonChannelService* QJsonChannelServiceRepository::getService (const QByteArray
     return d->services.value (serviceName);
 }
 
-QObject* QJsonChannelServiceRepository::getServiceObject (const QByteArray& serviceName) {
+QSharedPointer<QObject> QJsonChannelServiceRepository::getServiceObject (const QByteArray& serviceName) {
     if (!d->services.contains (serviceName)) {
         return nullptr;
     }
@@ -89,7 +83,7 @@ QObject* QJsonChannelServiceRepository::getServiceObject (const QByteArray& serv
 
 QJsonChannelMessage QJsonChannelServiceRepository::processMessage (const QJsonChannelMessage& message) {
     switch (message.type ()) {
-    case QJsonChannelMessage::Init: {
+    case QJsonChannelMessage::Discrovery: {
         QJsonChannelMessage response = message.createResponse (d->servicesInfo ());
         return response;
     }
@@ -104,7 +98,7 @@ QJsonChannelMessage QJsonChannelServiceRepository::processMessage (const QJsonCh
                 return error;
             }
         } else {
-            QJsonChannelService* service  = d->services.value (serviceName);
+            QSharedPointer <QJsonChannelService> service  = d->services.value (serviceName);
             QJsonChannelMessage  response = service->dispatch (message);
             return response;
         }

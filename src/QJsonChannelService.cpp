@@ -16,9 +16,9 @@ class QJsonChannelService;
 
 class QJsonChannelServicePrivate {
 public:
-    QJsonChannelServicePrivate (QJsonChannelService* parent, const QByteArray& name, const QByteArray& version, const QByteArray& description, QObject* obj)
-        : //delayedResponse(false),
-          q_ptr (parent), serviceName (name), serviceVersion (version), serviceDescription (description), serviceObj (obj) {
+    QJsonChannelServicePrivate (QJsonChannelService* parent, const QByteArray& name, const QByteArray& version, const QByteArray& description,
+                                QSharedPointer<QObject> obj)
+        : q_ptr (parent), serviceName (name), serviceVersion (version), serviceDescription (description), serviceObj (obj) {
     }
 
     QJsonObject createServiceInfo () const;
@@ -54,7 +54,7 @@ public:
     QJsonObject serviceInfo;
 
     QJsonChannelService* const q_ptr;
-    QObject*                   serviceObj = nullptr;
+    QSharedPointer<QObject>    serviceObj;
     QByteArray                 serviceName;
     QString                    serviceVersion;
     QString                    serviceDescription;
@@ -103,55 +103,17 @@ QJsonChannelServicePrivate::MethodInfo::MethodInfo (const QMetaMethod& method) :
     }
 }
 
-//QByteArray getClassInfo(QObject* obj, const char* field) {
-//	const QMetaObject* mo = obj->metaObject();
-//	for (int i = 0; i < mo->classInfoCount(); i++) {
-//		const QMetaClassInfo mci = mo->classInfo(i);
-//		if (mci.name() == QLatin1String(field))
-//			return mci.value();
-//	}
-//
-//	return QByteArray();
-//}
-//
-//QByteArray getServiceName (QObject* obj) {
-//	QByteArray serviceName = getClassInfo(obj, "serviceName");
-//	if (serviceName.isEmpty()) {
-//		const QMetaObject* mo = obj->metaObject();
-//		serviceName = QByteArray(mo->className()).toLower();
-//	}
-//	return serviceName;
-//}
-//
-//QByteArray getServiceDescription(QObject* obj) {
-//	return getClassInfo(obj, "serviceDescription");
-//}
-//
-//QByteArray getServiceVersion(QObject* obj) {
-//	return getClassInfo(obj, "serviceVersion");
-//}
-//
-//QJsonChannelService::QJsonChannelService (QObject* parent) : QObject (parent) {
-//    d_ptr.reset (new QJsonChannelServicePrivate (this, getServiceName (this), getServiceVersion(this), getServiceDescription(this), this));
-//}
-//
-//QJsonChannelService::QJsonChannelService (const QByteArray& name, QObject* serviceObj, const QByteArray& version, const QByteArray& description,
-//                                          QObject* parent)
-//    : QObject (parent) {
-//    d_ptr.reset (new QJsonChannelServicePrivate (this, name, version, description, serviceObj));
-//}
-
-QJsonChannelService::QJsonChannelService (const QByteArray& name, const QByteArray& version, const QByteArray& description, QObject* serviceObj,
-                                          QObject* parent)
-    : QObject (parent) {
+QJsonChannelService::QJsonChannelService (const QByteArray& name, const QByteArray& version, const QByteArray& description,
+                                          QSharedPointer<QObject> serviceObj) {
     d_ptr.reset (new QJsonChannelServicePrivate (this, name, version, description, serviceObj));
+    d_ptr->cacheInvokableInfo ();
 }
 
 QJsonChannelService::~QJsonChannelService () {
 }
 
-QObject* QJsonChannelService::serviceObj() {
-	return d_ptr->serviceObj;
+QSharedPointer<QObject> QJsonChannelService::serviceObj () {
+    return d_ptr->serviceObj;
 }
 
 const QByteArray& QJsonChannelService::serviceName () const {
@@ -160,10 +122,6 @@ const QByteArray& QJsonChannelService::serviceName () const {
 
 const QJsonObject& QJsonChannelService::serviceInfo () const {
     return d_ptr->serviceInfo;
-}
-
-const QMetaObject* QJsonChannelService::serviceMetaObject () const {
-    return d_ptr->serviceObj->metaObject ();
 }
 
 QString convertToString (QJsonValue::Type t) {
@@ -272,9 +230,9 @@ int QJsonChannelServicePrivate::convertVariantTypeToJSType (int type) {
 int QJsonChannelServicePrivate::QJsonChannelMessageType = qRegisterMetaType<QJsonChannelMessage> ("QJsonChannelMessage");
 
 void QJsonChannelServicePrivate::cacheInvokableInfo () {
-    QObject*           q        = serviceObj;
-    const QMetaObject* obj      = q->metaObject ();
-    int                startIdx = q->staticMetaObject.methodCount (); // skip QObject slots
+    QSharedPointer<QObject>& q        = serviceObj;
+    const QMetaObject*       obj      = q->metaObject ();
+    int                      startIdx = q->staticMetaObject.methodCount (); // skip QObject slots
     for (int idx = startIdx; idx < obj->methodCount (); ++idx) {
         const QMetaMethod method = obj->method (idx);
         if ((method.methodType () == QMetaMethod::Slot && method.access () == QMetaMethod::Public) || method.methodType () == QMetaMethod::Signal) {
@@ -392,11 +350,6 @@ static inline QByteArray methodName (const QJsonChannelMessage& request) {
     return methodPath.midRef (methodPath.lastIndexOf ('.') + 1).toLatin1 ();
 }
 
-void QJsonChannelService::cacheInvokableInfo () {
-    Q_D (QJsonChannelService);
-    d->cacheInvokableInfo ();
-}
-
 QJsonChannelMessage QJsonChannelService::dispatch (const QJsonChannelMessage& request) {
     Q_D (QJsonChannelService);
     if (request.type () != QJsonChannelMessage::Request && request.type () != QJsonChannelMessage::Notification) {
@@ -462,8 +415,8 @@ QJsonChannelMessage QJsonChannelService::dispatch (const QJsonChannelMessage& re
 
     QJsonChannelServicePrivate::MethodInfo& info = d->methodInfoHash[idx];
 
-    QObject* serviceObj = d->serviceObj;
-    bool     success    = serviceObj->qt_metacall (QMetaObject::InvokeMetaMethod, idx, parameters.data ()) < 0;
+    QSharedPointer<QObject>& serviceObj = d->serviceObj;
+    bool                     success    = serviceObj->qt_metacall (QMetaObject::InvokeMetaMethod, idx, parameters.data ()) < 0;
     if (!success) {
         QString message = QString ("dispatch for method '%1' failed").arg (method.constData ());
         return request.createErrorResponse (QJsonChannel::InvalidRequest, message);

@@ -1,36 +1,59 @@
 #pragma once
 
-#include <QVariant>
-#include <QPointer>
+#include <QObject>
+#include <QByteArray>
+#include <QSharedPointer>
 
 #include "QJsonChannelMessage.h"
 
-class QJsonChannelServiceRepository;
 class QJsonChannelServicePrivate;
-class QJSONCHANNELCORE_EXPORT QJsonChannelService : public QObject {
-    Q_OBJECT
+class QJSONCHANNELCORE_EXPORT QJsonChannelService {
 public:
-    // QJsonChannelService wrapper
-    QJsonChannelService (const QByteArray& name, const QByteArray& version, const QByteArray& description, QObject* obj, QObject* parent = nullptr);
 
-    //// for inheritance
-    //explicit QJsonChannelService (QObject* parent = nullptr);
-
+    /**
+     * @brief Construct a new QJsonChannelService object
+     * 
+     * @param name Service name
+     * @param version Service version
+     * @param description Service description
+     * @param obj Service object
+     */
+	QJsonChannelService (const QByteArray& name, const QByteArray& version, const QByteArray& description, QSharedPointer<QObject> obj);
     ~QJsonChannelService ();
 
-    QObject*           serviceObj ();
-    const QByteArray&  serviceName () const;
-    const QJsonObject& serviceInfo () const;
+    /**
+     * @brief Returns service object
+     * 
+     * @return QSharedPointer<QObject> 
+     */
+    QSharedPointer<QObject> serviceObj ();
 
-    const QMetaObject* serviceMetaObject () const;
+    /**
+     * @brief Returns service name
+     * 
+     * @return const QByteArray& 
+     */
+    const QByteArray&       serviceName () const;
+
+    /**
+     * @brief Returns JSON Document contains JSON Schema Service Descriptor 
+     * (https://jsonrpc.org/historical/json-schema-service-descriptor.html)
+     * 
+     * @return const QJsonObject& 
+     */
+    const QJsonObject&      serviceInfo () const;
+
+    /**
+     * @brief Process a JSON-RPC message. In general it means the invocation of a requested function.
+     * 
+     * @param message JSON-RPC message
+     * @return QJsonChannelMessage JSON-RPC response message
+     */
+    QJsonChannelMessage dispatch (const QJsonChannelMessage& request);
 
 private:
-    QJsonChannelMessage dispatch (const QJsonChannelMessage& request);
-    void                cacheInvokableInfo ();
-
     Q_DISABLE_COPY (QJsonChannelService)
     Q_DECLARE_PRIVATE (QJsonChannelService)
-    friend class QJsonChannelServiceRepository;
 
 #if !defined(USE_QT_PRIVATE_HEADERS)
     QScopedPointer<QJsonChannelServicePrivate> d_ptr;

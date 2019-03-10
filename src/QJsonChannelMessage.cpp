@@ -50,7 +50,7 @@ void QJsonChannelMessagePrivate::initializeWithObject(const QJsonObject &message
                 type = QJsonChannelMessage::Response;
         } else if (message.contains(QLatin1String("method"))) {
 			if (message.value(QLatin1String("method")) == "__init__") {
-				type = QJsonChannelMessage::Init;
+				type = QJsonChannelMessage::Discrovery;
 			} else {
 				type = QJsonChannelMessage::Request;
 			}

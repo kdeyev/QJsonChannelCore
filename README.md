@@ -12,7 +12,7 @@ QJsonChannelServiceRepository serviceRepository;
 You can bind QObjects to the QJsonChannelServiceRepository.
 ~~~~~~
 // Build a service object
-QObject* testService = new TestService();
+QSharedPointer<QObject> testService (new TestService());
 
 // Add the service to the repository
 serviceRepository.addService ("agent", "1.0", "test service", testService);
@@ -20,15 +20,27 @@ serviceRepository.addService ("agent", "1.0", "test service", testService);
 
 The main funcuonality of the QJsonChannelServiceRepository is processing QJsonChannelMessage and dispatching them to QJsonChannelService.
 ~~~~~~
-
 // A JSON-RPC request
 QJsonChannelMessage request;
-request.fromJson(...);
+request.fromJson (...);
 
 QJsonChannelMessage response = serviceRepository.processMessage (request);
 
-// Get a JSOON-RPC response
-QByteArray ... = response.toJson();
+// Get a JSOON-RPC response as a string
+QByteArray ... = response.toJson ();
+~~~~~~
+
+You also can wrap your QObject by QJsonChannelService and work directly with the service:
+~~~~~~
+QJsonChannelService service("myService", "7.5 alpha", "Service answers toy your questions", QSharedPointer<QObject> (new Oracle ()));
+
+// A JSON-RPC request
+QJsonChannelMessage request = QJsonChannelMessage::createRequest("question", QJsonValue (42));
+
+QJsonChannelMessage response = service.dispatch (request);
+
+// Get a JSOON-RPC response as integer
+int answer = response.result ().toInt ();
 ~~~~~~
 
 [API Documentation](http://kdeyev.github.io/QJsonChannelCore)

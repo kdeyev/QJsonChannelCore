@@ -24,7 +24,7 @@ public:
       * @return true in case the sevice was added
       * @return false in case of failure
       */
-     bool addService (QJsonChannelService* service);
+     bool addService (const QSharedPointer <QJsonChannelService>& service);
     
     /**
      * @brief Adds service to the repository
@@ -36,32 +36,23 @@ public:
      * @return true In case the sevice was added
      * @return false In case of failure
      */
-    bool addService (const QByteArray& name, const QByteArray& version, const QByteArray& description, QObject* obj);
+    bool addService (const QByteArray& name, const QByteArray& version, const QByteArray& description, QSharedPointer<QObject> obj);
 
     /**
      * @brief Return service by name
      * 
      * @param serviceName a service name to search
-     * @return QJsonChannelService* a found sevice 
+     * @return QSharedPointer <QJsonChannelService>  a found sevice 
      */
-    QJsonChannelService* getService (const QByteArray& serviceName);
+	QSharedPointer <QJsonChannelService> getService (const QByteArray& serviceName);
 
     /**
      * @brief Return service object by name
      * 
      * @param serviceName a service name to search
-     * @return QJsonChannelService* a found sevice 
+     * @return QSharedPointer<QObject> a found sevice 
      */
-    QObject* getServiceObject (const QByteArray& serviceName);
-
-    /**
-     * @brief Removes service from the repository
-     * 
-     * @param service A service to remove from the repository
-     * @return true in case the sevice was removed
-     * @return false in case of failure
-     */
-    bool removeService (QJsonChannelService* service);
+	QSharedPointer<QObject> getServiceObject (const QByteArray& serviceName);
 
     /**
      * @brief Removes service from the repository
@@ -73,7 +64,7 @@ public:
     bool removeService (const QByteArray& serviceName);
 
     /**
-     * @brief Process a JSON-RPC message. In general it means the invogation of a requested function of a requested service
+     * @brief Process a JSON-RPC message. In general it means the invocation of a requested function of a requested service
      * 
      * @param message JSON-RPC message
      * @return QJsonChannelMessage JSON-RPC response message
