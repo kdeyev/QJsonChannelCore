@@ -2,7 +2,7 @@
 
 #include <QtGlobal>
 #include <QMetaType>
-#include "qjsonchannel_export.h"
+#include "QJsonChannelCore_export.h"
 
 // error codes defined by spec
 namespace QJsonChannel {

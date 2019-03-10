@@ -10,7 +10,7 @@
 #include "QJsonChannelGlobal.h"
 
 class QJsonChannelMessagePrivate;
-class QJSONCHANNEL_EXPORT QJsonChannelMessage {
+class QJSONCHANNELCORE_EXPORT QJsonChannelMessage {
 public:
     QJsonChannelMessage ();
     QJsonChannelMessage (const QJsonChannelMessage& other);
@@ -67,6 +67,6 @@ private:
     QSharedDataPointer<QJsonChannelMessagePrivate> d;
 };
 
-QJSONCHANNEL_EXPORT QDebug operator<< (QDebug, const QJsonChannelMessage&);
+QJSONCHANNELCORE_EXPORT QDebug operator<< (QDebug, const QJsonChannelMessage&);
 Q_DECLARE_METATYPE (QJsonChannelMessage)
 Q_DECLARE_SHARED (QJsonChannelMessage)

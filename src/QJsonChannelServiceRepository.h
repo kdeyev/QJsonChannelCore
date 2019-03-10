@@ -12,7 +12,7 @@ class QJsonChannelServiceRepositoryPrivate;
  * @brief The main entity of QJsonChannel represents service repository and provides API for a JSON-RPC method invokation.
  * 
  */
-class QJSONCHANNEL_EXPORT QJsonChannelServiceRepository {
+class QJSONCHANNELCORE_EXPORT QJsonChannelServiceRepository {
 public:
     QJsonChannelServiceRepository ();
     ~QJsonChannelServiceRepository ();

@@ -7,7 +7,7 @@
 
 class QJsonChannelServiceRepository;
 class QJsonChannelServicePrivate;
-class QJSONCHANNEL_EXPORT QJsonChannelService : public QObject {
+class QJSONCHANNELCORE_EXPORT QJsonChannelService : public QObject {
     Q_OBJECT
 public:
     // QJsonChannelService wrapper

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(QJsonChannel VERSION 1.0)
+project(QJsonChannelCore VERSION 1.0)
 
 set(${PROJECT_NAME}_INCLUDE_DIR  ${PROJECT_SOURCE_DIR}/src PARENT_SCOPE)
 
