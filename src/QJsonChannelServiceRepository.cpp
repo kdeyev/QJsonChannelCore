@@ -88,7 +88,7 @@ QSharedPointer<QObject> QJsonChannelServiceRepository::getServiceObject (const Q
     return d->services.value (serviceName)->serviceObj ();
 }
 
-QJsonChannelMessage QJsonChannelServiceRepository::processMessage (const QJsonChannelMessage& message) {
+QJsonChannelMessage QJsonChannelServiceRepository::processMessage (const QJsonChannelMessage& message) const {
     switch (message.type ()) {
     case QJsonChannelMessage::Discrovery: {
         QJsonChannelMessage response = message.createResponse (d->servicesInfo ());

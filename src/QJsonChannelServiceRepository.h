@@ -81,7 +81,7 @@ public:
      * @param message JSON-RPC message
      * @return QJsonChannelMessage JSON-RPC response message
      */
-    QJsonChannelMessage processMessage (const QJsonChannelMessage& message);
+    QJsonChannelMessage processMessage (const QJsonChannelMessage& message) const;
 
 private:
     QScopedPointer<QJsonChannelServiceRepositoryPrivate> d;
