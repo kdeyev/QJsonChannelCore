@@ -1,9 +1,9 @@
 # QJsonChannel Core Library <img src="https://seeklogo.com/images/C/c-logo-43CE78FF9C-seeklogo.com.png" width="24" height="24">
 
-QJsonChannelCore utilises ideas and some implementation details of [QJsonRpc](https://bitbucket.org/devonit/qjsonrpc) implementation. QJsonRpc library has tight integration with communication transport and supports server-to-client messages. So QJsonChannel library development for resolving these QJsonRpc specialties. 
-In addition, QJsonChannel supports [JSON Schema Service Descriptor](https://jsonrpc.org/historical/json-schema-service-descriptor.html) for services and methods discovery.
+QJsonChannelCore utilises ideas and some implementation details of [QJsonRpc](https://bitbucket.org/devonit/qjsonrpc) implementation. QJsonRpc library has tight integration with communication transport and supports server-to-client messages. So QJsonChannelCore library development was started for resolving these QJsonRpc specialties. 
+In addition, QJsonChannelCore supports [JSON Schema Service Descriptor](https://jsonrpc.org/historical/json-schema-service-descriptor.html) for services and methods discovery.
 
-The main component of QJsonChannel is QJsonChannelServiceRepository. 
+The main component of QJsonChannelCore is QJsonChannelServiceRepository. 
 ~~~~~~
 // Build a service repository
 QJsonChannelServiceRepository serviceRepository;
