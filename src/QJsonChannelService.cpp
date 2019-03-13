@@ -30,6 +30,10 @@ public:
     static int        convertVariantTypeToJSType (int type);
     static QJsonValue convertReturnValue (QVariant& returnValue);
 
+	QJsonChannelMessage invokeMethod(int methodIndex, const QJsonChannelMessage& request) const;
+	QJsonChannelMessage  callGetter(int propertyIndex, const QJsonChannelMessage& request) const;
+	QJsonChannelMessage  callSetter(int propertyIndex, const QJsonChannelMessage& request) const;
+
     struct ParameterInfo {
         ParameterInfo (const QString& name = QString (), int type = 0, bool out = false);
 
@@ -50,8 +54,21 @@ public:
         QString                        _name;
     };
 
+	struct PropInfo {
+		PropInfo() = default;
+		PropInfo(QMetaProperty info);
+		QMetaProperty _prop;
+
+		QString						   _name;
+		int                            _type;
+		QString						   _typeName;
+		QString                        _getterName;
+		QString                        _setterName;
+	};
+
     QHash<int, MethodInfo>        _methodInfoHash;
-    QHash<QByteArray, QList<int>> _invokableMethodHash;
+	QHash<int, PropInfo>          _propertyInfoHash;
+    QHash<QByteArray, QList<QPair<int,int>>> _invokableMethodHash;
 
     QJsonObject _serviceInfo;
 
@@ -104,6 +121,21 @@ QJsonChannelServicePrivate::MethodInfo::MethodInfo (const QMetaMethod& method) :
 
         _parameters.append (ParameterInfo (parameterName, type, out));
     }
+}
+
+QJsonChannelServicePrivate::PropInfo::PropInfo(QMetaProperty info) {
+	_prop = info;
+	_name = _prop.name();
+	_name[0] = _name[0].toUpper();
+	_typeName = _prop.typeName();
+	_type = QMetaType::type(_typeName.toStdString().c_str());
+
+	if (_prop.isReadable()) {
+		_getterName = "get" + _name;
+	}
+	if (_prop.isWritable()) {
+		_setterName = "set" + _name;
+	}
 }
 
 QJsonChannelService::QJsonChannelService (const QByteArray& name, const QByteArray& version, const QByteArray& description, QSharedPointer<QObject> serviceObj,
@@ -171,9 +203,9 @@ QJsonObject QJsonChannelServicePrivate::createServiceInfo () const {
         const MethodInfo& info = iter.value ();
         QString           name = info._name;
 
-        if (identifiers.contains (name)) {
-            continue;
-        }
+        //if (identifiers.contains (name)) {
+        //    continue;
+        //}
         identifiers << name;
 
         QJsonObject method_desc;
@@ -193,6 +225,46 @@ QJsonObject QJsonChannelServicePrivate::createServiceInfo () const {
         method_desc["result"] = createParameterDescription ("return value", convertVariantTypeToJSType (info._returnType));
         qtMethods[name]       = method_desc;
     }
+
+	for (auto iter = _propertyInfoHash.begin(); iter != _propertyInfoHash.end(); ++iter) {
+		const PropInfo& info = iter.value();
+		{
+			QString           name = info._getterName;
+			identifiers << name;
+
+			QJsonObject method_desc;
+			method_desc["summary"] = name;
+			method_desc["description"] = name;
+
+			QJsonObject properties;
+			QJsonObject params;
+			params["type"] = "object";
+			params["properties"] = properties;
+
+			method_desc["params"] = params;
+			method_desc["result"] = createParameterDescription("return value", convertVariantTypeToJSType(info._type));
+			qtMethods[name] = method_desc;
+		}
+		{
+			QString  name = info._setterName;
+			identifiers << name;
+
+			QJsonObject method_desc;
+			method_desc["summary"] = name;
+			method_desc["description"] = name;
+
+			QJsonObject properties;
+			properties[info._name] = createParameterDescription(info._name, convertVariantTypeToJSType(info._type));
+
+			QJsonObject params;
+			params["type"] = "object";
+			params["properties"] = properties;
+
+			method_desc["params"] = params;
+			method_desc["result"] = createParameterDescription("return value", QJsonValue::Undefined);
+			qtMethods[name] = method_desc;
+		}
+	}
 
     data["methods"] = qtMethods;
     return data;
@@ -247,20 +319,28 @@ void QJsonChannelServicePrivate::cacheInvokableInfo () {
                 continue;
 
             if (signature.contains ("QVariant"))
-                _invokableMethodHash[methodName].append (idx);
+                _invokableMethodHash[methodName].append (QPair<int, int>(0, idx));
             else
-                _invokableMethodHash[methodName].prepend (idx);
+                _invokableMethodHash[methodName].prepend (QPair<int, int>(0, idx));
+
             _methodInfoHash[idx] = info;
         }
     }
 
-	//int count = meta_obj->propertyCount();
-	//for (int i = 0; i<count; ++i) {
-	//	QMetaProperty metaproperty = meta_obj->property(i);
-	//	const char *name = metaproperty.name();
-	//	QVariant value = object->property(name);
-	//	...
-	//}
+	for (int idx = 0; idx< meta_obj->propertyCount(); ++idx) {
+		QMetaProperty info = meta_obj->property(idx);
+
+		PropInfo propInfo(info);
+		
+		if (propInfo._getterName.isEmpty() == false) {
+			_invokableMethodHash[propInfo._getterName.toLatin1()].append(QPair<int, int>(1, idx));
+		}	
+		if (propInfo._setterName.isEmpty() == false) {
+			_invokableMethodHash[propInfo._setterName.toLatin1()].append(QPair<int, int>(2, idx));
+		}
+
+		_propertyInfoHash[idx] = propInfo;
+	}
 
     _serviceInfo = createServiceInfo ();
 }
@@ -297,31 +377,31 @@ static bool jsParameterCompare (const QJsonObject& parameters, const QJsonChanne
     return true;
 }
 
-static inline QVariant convertArgument (const QJsonValue& argument, const QJsonChannelServicePrivate::ParameterInfo& info) {
+static inline QVariant convertArgument (const QJsonValue& argument, int type) {
     if (argument.isUndefined ())
-        return QVariant (info._type, Q_NULLPTR);
+        return QVariant (type, Q_NULLPTR);
 
-    if (info._type == QMetaType::QJsonValue || info._type == QMetaType::QVariant || info._type >= QMetaType::User) {
-        if (info._type == QMetaType::QVariant)
+    if (type == QMetaType::QJsonValue || type == QMetaType::QVariant || type >= QMetaType::User) {
+        if (type == QMetaType::QVariant)
             return argument.toVariant ();
 
         QVariant result (argument);
-        if (info._type >= QMetaType::User && result.canConvert (info._type))
-            result.convert (info._type);
+        if (type >= QMetaType::User && result.canConvert (type))
+            result.convert (type);
         return result;
     }
 
     QVariant result = argument.toVariant ();
-    if (result.userType () == info._type || info._type == QMetaType::QVariant) {
+    if (result.userType () == type || type == QMetaType::QVariant) {
         return result;
-    } else if (result.canConvert (info._type)) {
-        result.convert (info._type);
+    } else if (result.canConvert (type)) {
+        result.convert (type);
         return result;
-    } else if (info._type < QMetaType::User) {
+    } else if (type < QMetaType::User) {
         // already tried for >= user, this is the last resort
         QVariant result (argument);
-        if (result.canConvert (info._type)) {
-            result.convert (info._type);
+        if (result.canConvert (type)) {
+            result.convert (type);
             return result;
         }
     }
@@ -356,10 +436,131 @@ QJsonValue QJsonChannelServicePrivate::convertReturnValue (QVariant& returnValue
     }
 }
 
+QJsonChannelMessage  QJsonChannelServicePrivate::invokeMethod(int methodIndex, const QJsonChannelMessage& request) const {
+	const QJsonChannelServicePrivate::MethodInfo& info = _methodInfoHash[methodIndex];
+
+	QVariantList               arguments;
+	arguments.reserve(info._parameters.size());
+
+	QMetaType::Type            returnType = static_cast<QMetaType::Type> (info._returnType);
+
+	QVarLengthArray<void*, 10> parameters;
+	QVariant                   returnValue = (returnType == QMetaType::Void) ? QVariant() : QVariant(returnType, Q_NULLPTR);
+
+	const QJsonValue&          params = request.params();
+
+	bool usingNamedParameters = params.isObject();
+
+
+	if (returnType == QMetaType::QVariant)
+		parameters.append(&returnValue);
+	else
+		parameters.append(returnValue.data());
+
+	for (int i = 0; i < info._parameters.size(); ++i) {
+		const QJsonChannelServicePrivate::ParameterInfo& parameterInfo = info._parameters.at(i);
+		QJsonValue incomingArgument = usingNamedParameters ? params.toObject().value(parameterInfo._name) : params.toArray().at(i);
+
+		QVariant argument = convertArgument(incomingArgument, parameterInfo._type);
+		if (!argument.isValid()) {
+			QString message = incomingArgument.isUndefined() ? QString("failed to construct default object for '%1'").arg(parameterInfo._name)
+				: QString("failed to convert from JSON for '%1'").arg(parameterInfo._name);
+			return request.createErrorResponse(QJsonChannel::InvalidParams, message);
+		}
+
+		arguments.push_back(argument);
+		if (parameterInfo._type == QMetaType::QVariant)
+			parameters.append(static_cast<void*> (&arguments.last()));
+		else
+			parameters.append(const_cast<void*> (arguments.last().constData()));
+	}
+
+	bool success = false;
+	if (_isServiceObjThreadSafe) {
+		success = _serviceObj->qt_metacall(QMetaObject::InvokeMetaMethod, methodIndex, parameters.data()) < 0;
+	}
+	else {
+		QMutexLocker lock(&_serviceMutex);
+		success = _serviceObj->qt_metacall(QMetaObject::InvokeMetaMethod, methodIndex, parameters.data()) < 0;
+	}
+
+	if (!success) {
+		QString message = QString("dispatch for method '%1' failed").arg(info._name);
+		return request.createErrorResponse(QJsonChannel::InvalidRequest, message);
+	}
+
+	if (info._hasOut) {
+		QJsonArray ret;
+		if (info._returnType != QMetaType::Void)
+			ret.append(QJsonChannelServicePrivate::convertReturnValue(returnValue));
+		for (int i = 0; i < info._parameters.size(); ++i)
+			if (info._parameters.at(i)._out)
+				ret.append(QJsonChannelServicePrivate::convertReturnValue(arguments[i]));
+		if (ret.size() > 1)
+			return request.createResponse(ret);
+		return request.createResponse(ret.first());
+	}
+
+	return request.createResponse(QJsonChannelServicePrivate::convertReturnValue(returnValue));
+}
+
+// getter
+QJsonChannelMessage  QJsonChannelServicePrivate::callGetter(int propertyIndex, const QJsonChannelMessage& request) const {
+	//if (usingNamedParameters) {
+	//	return request.createErrorResponse(QJsonChannel::InvalidRequest, "getters are supporting only array-styled requests");
+	//}
+	const QJsonValue&          params = request.params();
+	QJsonArray arr = params.toArray();
+	if (arr.size() != 0) {
+		return request.createErrorResponse(QJsonChannel::InvalidRequest, "getter shouldn't have parameters");
+	}
+
+	const QJsonChannelServicePrivate::PropInfo& prop = _propertyInfoHash[propertyIndex];
+	
+	QVariant returnValue;
+	if (_isServiceObjThreadSafe) {
+		returnValue = prop._prop.read(_serviceObj.data());
+	}
+	else {
+		QMutexLocker lock(&_serviceMutex);
+		returnValue = prop._prop.read(_serviceObj.data());
+	}
+
+	return request.createResponse(QJsonChannelServicePrivate::convertReturnValue(returnValue));
+}
+
+QJsonChannelMessage  QJsonChannelServicePrivate::callSetter(int propertyIndex, const QJsonChannelMessage& request) const {
+	//if (usingNamedParameters) {
+	//	return request.createErrorResponse(QJsonChannel::InvalidRequest, "setters are supporting only array-styled requests");
+	//}
+	const QJsonValue&          params = request.params();
+	QJsonArray arr = params.toArray();
+	if (arr.size() != 1) {
+		return request.createErrorResponse(QJsonChannel::InvalidRequest, "setter should have one parameter");
+	}
+
+	const QJsonChannelServicePrivate::PropInfo& prop = _propertyInfoHash[propertyIndex];
+
+	QVariant argument = convertArgument(arr[0], prop._type);
+
+	if (_isServiceObjThreadSafe) {
+		prop._prop.write(_serviceObj.data(), argument);
+	}
+	else {
+		QMutexLocker lock(&_serviceMutex);
+		prop._prop.write(_serviceObj.data(), argument);
+	}
+
+	// no return value
+	QVariant returnValue;
+	return request.createResponse(QJsonChannelServicePrivate::convertReturnValue(returnValue));
+}
+
 static inline QByteArray methodName (const QJsonChannelMessage& request) {
     const QString& methodPath (request.method ());
     return methodPath.midRef (methodPath.lastIndexOf ('.') + 1).toLatin1 ();
 }
+
 
 QJsonChannelMessage QJsonChannelService::dispatch (const QJsonChannelMessage& request) const {
     const QJsonChannelServicePrivate* d = d_ptr.get ();
@@ -372,86 +573,44 @@ QJsonChannelMessage QJsonChannelService::dispatch (const QJsonChannelMessage& re
         return request.createErrorResponse (QJsonChannel::MethodNotFound, "invalid method called");
     }
 
-    int                        idx = -1;
-    QVariantList               arguments;
-    const QList<int>&          indexes = d->_invokableMethodHash.value (method);
+
+    const QList<QPair<int,int>>& indexes = d->_invokableMethodHash.value (method);
     const QJsonValue&          params  = request.params ();
-    QVarLengthArray<void*, 10> parameters;
-    QVariant                   returnValue;
-    QMetaType::Type            returnType = QMetaType::Void;
 
     bool usingNamedParameters = params.isObject ();
 
     // iterate over candidates
-    foreach (int methodIndex, indexes) {
-        const QJsonChannelServicePrivate::MethodInfo& info = d->_methodInfoHash[methodIndex];
-        bool methodMatch = usingNamedParameters ? jsParameterCompare (params.toObject (), info) : jsParameterCompare (params.toArray (), info);
+    for (const QPair<int, int>& methodInfo : indexes) {
+		// method call
+		if (methodInfo.first == 0) {
+			int methodIndex = methodInfo.second;
 
-        if (methodMatch) {
-            idx = methodIndex;
-            arguments.reserve (info._parameters.size ());
-            returnType  = static_cast<QMetaType::Type> (info._returnType);
-            returnValue = (returnType == QMetaType::Void) ? QVariant () : QVariant (returnType, Q_NULLPTR);
-            if (returnType == QMetaType::QVariant)
-                parameters.append (&returnValue);
-            else
-                parameters.append (returnValue.data ());
+			const QJsonChannelServicePrivate::MethodInfo& info = d->_methodInfoHash[methodIndex];
+			bool methodMatch = usingNamedParameters ? jsParameterCompare(params.toObject(), info) : jsParameterCompare(params.toArray(), info);
 
-            for (int i = 0; i < info._parameters.size (); ++i) {
-                const QJsonChannelServicePrivate::ParameterInfo& parameterInfo = info._parameters.at (i);
-                QJsonValue incomingArgument = usingNamedParameters ? params.toObject ().value (parameterInfo._name) : params.toArray ().at (i);
+			if (methodMatch) {
+				return d->invokeMethod(methodIndex, request);
+			}
+		}
 
-                QVariant argument = convertArgument (incomingArgument, parameterInfo);
-                if (!argument.isValid ()) {
-                    QString message = incomingArgument.isUndefined () ? QString ("failed to construct default object for '%1'").arg (parameterInfo._name)
-                                                                      : QString ("failed to convert from JSON for '%1'").arg (parameterInfo._name);
-                    return request.createErrorResponse (QJsonChannel::InvalidParams, message);
-                }
+		// getter
+		if (methodInfo.first == 1) {
+			if (usingNamedParameters) {
+				return request.createErrorResponse(QJsonChannel::InvalidRequest, "getters are supporting only array-styled requests");
+			}
+			int propertyIndex = methodInfo.second;
 
-                arguments.push_back (argument);
-                if (parameterInfo._type == QMetaType::QVariant)
-                    parameters.append (static_cast<void*> (&arguments.last ()));
-                else
-                    parameters.append (const_cast<void*> (arguments.last ().constData ()));
-            }
-
-            // found a match
-            break;
-        }
+			return d->callGetter(propertyIndex, request);
+		}
+		// setter
+		if (methodInfo.first == 2) {
+			if (usingNamedParameters) {
+				return request.createErrorResponse(QJsonChannel::InvalidRequest, "setters are supporting only array-styled requests");
+			}
+			int propertyIndex = methodInfo.second;
+			return d->callSetter(propertyIndex, request);
+		}
     }
 
-    if (idx == -1) {
-        return request.createErrorResponse (QJsonChannel::InvalidParams, "invalid parameters");
-    }
-
-    const QJsonChannelServicePrivate::MethodInfo& info = d->_methodInfoHash[idx];
-
-    const QSharedPointer<QObject>& serviceObj = d->_serviceObj;
-
-    bool success = false;
-    if (d->_isServiceObjThreadSafe) {
-        success = serviceObj->qt_metacall (QMetaObject::InvokeMetaMethod, idx, parameters.data ()) < 0;
-    } else {
-        QMutexLocker lock (&d->_serviceMutex);
-        success = serviceObj->qt_metacall (QMetaObject::InvokeMetaMethod, idx, parameters.data ()) < 0;
-    }
-
-    if (!success) {
-        QString message = QString ("dispatch for method '%1' failed").arg (method.constData ());
-        return request.createErrorResponse (QJsonChannel::InvalidRequest, message);
-    }
-
-    if (info._hasOut) {
-        QJsonArray ret;
-        if (info._returnType != QMetaType::Void)
-            ret.append (QJsonChannelServicePrivate::convertReturnValue (returnValue));
-        for (int i = 0; i < info._parameters.size (); ++i)
-            if (info._parameters.at (i)._out)
-                ret.append (QJsonChannelServicePrivate::convertReturnValue (arguments[i]));
-        if (ret.size () > 1)
-            return request.createResponse (ret);
-        return request.createResponse (ret.first ());
-    }
-
-    return request.createResponse (QJsonChannelServicePrivate::convertReturnValue (returnValue));
+    return request.createErrorResponse (QJsonChannel::InvalidParams, "invalid parameters");
 }
