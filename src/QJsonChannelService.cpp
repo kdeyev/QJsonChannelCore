@@ -233,11 +233,12 @@ int QJsonChannelServicePrivate::QJsonChannelMessageType = qRegisterMetaType<QJso
 
 void QJsonChannelServicePrivate::cacheInvokableInfo () {
     QSharedPointer<QObject>& q        = _serviceObj;
-    const QMetaObject*       obj      = q->metaObject ();
+    const QMetaObject*       meta_obj      = q->metaObject ();
     int                      startIdx = q->staticMetaObject.methodCount (); // skip QObject slots
-    for (int idx = startIdx; idx < obj->methodCount (); ++idx) {
-        const QMetaMethod method = obj->method (idx);
-        if ((method.methodType () == QMetaMethod::Slot && method.access () == QMetaMethod::Public) || method.methodType () == QMetaMethod::Signal) {
+    for (int idx = startIdx; idx < meta_obj->methodCount (); ++idx) {
+        const QMetaMethod method = meta_obj->method (idx);
+        if (method.access () == QMetaMethod::Public
+			|| method.methodType () == QMetaMethod::Signal) {
             QByteArray signature  = method.methodSignature ();
             QByteArray methodName = method.name ();
 
@@ -252,6 +253,14 @@ void QJsonChannelServicePrivate::cacheInvokableInfo () {
             _methodInfoHash[idx] = info;
         }
     }
+
+	//int count = meta_obj->propertyCount();
+	//for (int i = 0; i<count; ++i) {
+	//	QMetaProperty metaproperty = meta_obj->property(i);
+	//	const char *name = metaproperty.name();
+	//	QVariant value = object->property(name);
+	//	...
+	//}
 
     _serviceInfo = createServiceInfo ();
 }

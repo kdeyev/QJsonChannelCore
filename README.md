@@ -15,7 +15,7 @@ You can bind QObjects to the QJsonChannelServiceRepository.
 QSharedPointer<QObject> testService (new TestService());
 
 // Add the service to the repository
-serviceRepository.addService ("agent", "1.0", "test service", testService);
+serviceRepository.addService ("object", "1.0", "test service", testService);
 ~~~~~~
 
 The main funcuonality of the QJsonChannelServiceRepository is processing QJsonChannelMessage and dispatching them to QJsonChannelService.
