@@ -8,5 +8,5 @@ var classQJsonChannelServiceRepository =
     [ "getService", "classQJsonChannelServiceRepository.html#a30eb44c23a40abc72cf95984bc3ef9f6", null ],
     [ "getServiceObject", "classQJsonChannelServiceRepository.html#a86f4311ed476665ba7d77769f3cd0a58", null ],
     [ "removeService", "classQJsonChannelServiceRepository.html#a9e5bf74cccf97dde1fe63245a1cc25c0", null ],
-    [ "processMessage", "classQJsonChannelServiceRepository.html#a312e1ae42f822a12b1fcb5a0c585ed03", null ]
+    [ "processMessage", "classQJsonChannelServiceRepository.html#ad666cd953ea560e9f0b30662f20eb542", null ]
 ];
