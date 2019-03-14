@@ -17,15 +17,15 @@ public:
     QJsonChannelServiceRepository ();
     ~QJsonChannelServiceRepository ();
 
-     /**
+    /**
       * @brief Adds service to the repository
       * 
       * @param service A service to attach to the repository
       * @return true in case the sevice was added
       * @return false in case of failure
       */
-     bool addService (const QSharedPointer <QJsonChannelService>& service);
-    
+    bool addService (const QSharedPointer<QJsonChannelService>& service);
+
     /**
      * @brief Adds service to the repository
      * 
@@ -38,7 +38,7 @@ public:
      */
     bool addService (const QByteArray& name, const QByteArray& version, const QByteArray& description, QSharedPointer<QObject> obj);
 
-	/**
+    /**
 	* @brief Adds thread-safe service to the repository. Service will be not locker during the methods invocation.
 	*
 	* @param name Service name
@@ -48,7 +48,7 @@ public:
 	* @return true In case the sevice was added
 	* @return false In case of failure
 	*/
-	bool addThreadSafeService(const QByteArray& name, const QByteArray& version, const QByteArray& description, QSharedPointer<QObject> obj);
+    bool addThreadSafeService (const QByteArray& name, const QByteArray& version, const QByteArray& description, QSharedPointer<QObject> obj);
 
     /**
      * @brief Return service by name
@@ -56,7 +56,7 @@ public:
      * @param serviceName a service name to search
      * @return QSharedPointer <QJsonChannelService>  a found sevice 
      */
-	QSharedPointer <QJsonChannelService> getService (const QByteArray& serviceName);
+    QSharedPointer<QJsonChannelService> getService (const QByteArray& serviceName);
 
     /**
      * @brief Return service object by name
@@ -64,7 +64,7 @@ public:
      * @param serviceName a service name to search
      * @return QSharedPointer<QObject> a found sevice 
      */
-	QSharedPointer<QObject> getServiceObject (const QByteArray& serviceName);
+    QSharedPointer<QObject> getServiceObject (const QByteArray& serviceName);
 
     /**
      * @brief Removes service from the repository
